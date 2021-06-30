@@ -2,45 +2,42 @@ import torch
 import Config
 
 
-def createDataset(input_id,attention_mask,label,token_type_id):
-    dataset = torch.utils.data.TensorDataset(input_id,attention_mask,label,token_type_id)
-    return dataset 
-
-
-
 class TOXICDATASET:
-    def __init__(self,data,target):
-        self.data = data
+    def __init__(self,comment_text,target):
+        self.comment_text = comment_text
         self.target = target
-        self.tokenizer = Config.TOKENIZER 
+        self.tokenizer = Config.TOKENIZER
+        self.max_len = Config.MAX_LEN
     
     def __len__(self):
-        return len(self.data)
+        return len(self.comment_text)
     
-    def __getitem__(self):
-        input_ids = []
-        attention_masks = []
-        token_type_ids = []
+    def __getitem__(self,item):
+      comment_text = str(self.comment_text[item])
+      comment_text = " ".join(comment_text.split())
+        
+      inputs = self.tokenizer.encode_plus(comment_text,
+                                          None,
+                                          add_special_tokens = True,
+                                          max_length = self.max_len,
+                                          truncation=True)      
+      ids = inputs["input_ids"]
+      masks = inputs["attention_mask"]
+      token_type_ids = inputs["token_type_ids"]
 
-        for data in self.data:
-            encoded_dict = self.tokenizer.batch_encode_plus(data,
-                                                            add_special_tokens = True,
-                                                            max_length = Config.MAX_LEN,
-                                                            pad_to_max_length = True,
-                                                            return_attention_mask = True,
-                                                            return_tensors = 'pt',
-                                                            truncation=True)
-            
-            input_ids.append(encoded_dict["input_ids"])
-            attention_masks.append(encoded_dict["attention_mask"])
-            token_type_ids.append(encoded_dict["token_type_ids"])
 
-        return {
-            "input_ids" : torch.cat(input_ids,dim = 0),
-            "attention_masks" : torch.cat(attention_masks,dim = 0),
-            "token_type_ids" : torch.cat(token_type_ids,dim = 0),
-            "targets" : torch.tensor(self.target,dtype = torch.float64)
-        }
+      padding_length = self.max_len - len(ids)
+      ids = ids + ([0] * padding_length)
+      masks = masks + ([0] * padding_length)
+      token_type_ids = token_type_ids + ([0] * padding_length)
+
+
+      return {
+          "input_ids" : torch.tensor(ids,dtype = torch.long),
+          "attention_masks" : torch.tensor(masks,dtype = torch.long),
+          "token_type_ids" : torch.tensor(token_type_ids,dtype = torch.long),
+          "targets" : torch.tensor(self.target[item],dtype = torch.float)
+      }
 
 
 
