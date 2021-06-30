@@ -1,8 +1,6 @@
-import torch
-import Model
 import pandas as pd
-import Config
 import sklearn
+import numpy as np
 
 def optimizer_params(model):
     param_optimizer = list(model.named_parameters())
@@ -13,42 +11,33 @@ def optimizer_params(model):
     ]
     return optimizer_parameters   
 
-
-def save_checkpoint(state,filename = "My_Checkpoint.pth.tar"):
-    print("=> Saving Checkpoint")
-    torch.save(state,filename)
-
-
-def load_checkpoint(checkpoint):
-    print("=> Loading Checkpoint")
-    model = Model.TOXICMODEL()
-    myModel = model.load_state_dict(checkpoint["state_dict"])
-    # optimizer.load_state_dict(checkpoint["optimizer"])
-    return myModel
-
-
-def processing(path):
-    df = pd.read_csv(path)
-    df["One_Hot_Label"] = list(df[list(df.columns[2:])].values)
-    targets = list(df.One_Hot_Label.values)
-    data = list(df.comment_text.values)
-    return data,targets
-
+       
+    # True_label :- true label
+    # Predicted_label :- predicted label
 def accuracy_score(True_label,Predicted_label):
     Accuracy_Score = sklearn.metrics.accuracy_score(True_label, Predicted_label)
-    return f"The Accuracy Score is : {Accuracy_Score * 100}"
-
-
+    return Accuracy_Score
+        # True_label :- true label
+    # Predicted_label :- predicted label
 def f1_score(True_label,Predicted_label):
     F1_Score = sklearn.metrics.f1_score(True_label,Predicted_label,average = "micro")
-    return f"The F1_Score is : {F1_Score * 100}"
+    return F1_Score
 
-
+    # True_label :- true label
+    # Predicted_label :- predicted label
+    # labels = :- a list of column label name
 def multilabel_confusiom_matrix(True_label,Predicted_label,labels):
     MCM = sklearn.metrics.multilabel_confusion_matrix(y_true=True_label,
                                                       y_pred = Predicted_label,
                                                       labels =labels)
-    return f"Multilabel_Confusiom_Matrix : {MCM}"
+    return MCM
+
+#Creating the Accuracy Measurement Function
+# Function to calculate the accuracy of our predictions vs labels
+def flat_accuracy(predicted, true):
+    pred_flat = np.argmax(predicted, axis=1).flatten()
+    labels_flat = true.flatten()
+    return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
 
        
