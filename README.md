@@ -1,4 +1,4 @@
-# ALBERT-MultiLabel-Classification
+# BERT-MultiLabel-Multilingual-Classification
 
 Keep your train & test data in Data Folder.
 
